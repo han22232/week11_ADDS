@@ -1,34 +1,51 @@
 #include "DocumentManager.h"
 
 void DocumentManager::addDocument(string name, int id, int license_limit) {
-    documents[id] = Document(name, id, license_limit);
+    Document newDocument(name, id, license_limit);
+    documents[id] = newDocument;
 }
 
 void DocumentManager::addPatron(int patronID) {
-    patrons[patronID] = Patron(patronID);
+    Patron newPatron(patronID);
+    patrons[patronID] = newPatron;
 }
 
 int DocumentManager::search(string name) {
-    auto it = find_if(documents.begin(), documents.end(), [&](const pair<int, Document>& doc) { return doc.second.get_name() == name; });
-    return it != documents.end() ? it->first : 0;
+    for (auto& kv : documents) {
+        if (kv.second.get_name() == name) {
+            return kv.first;
+        }
+    }
+    return 0;
 }
 
 bool DocumentManager::borrowDocument(int docid, int patronID) {
-    // Simplifying condition check using logical AND operator
-    if (documents.count(docid) && patrons.count(patronID) && documents[docid].borrow_out()) {
-        patrons[patronID].borrowDocument(docid);
+  
+    auto docIt = documents.find(docid);
+    auto patIt = patrons.find(patronID);
+
+ 
+    if (docIt != documents.end() && patIt != patrons.end() && docIt->second.borrow_out()) {
+        
+        patIt->second.borrowDocument(docid);
         return true;
     }
+
     return false;
 }
-
 void DocumentManager::returnDocument(int docid, int patronID) {
-    // Check if both document and patron exist before trying to return the document
-    if (documents.count(docid) && patrons.count(patronID)) {
-        documents[docid].returnback();
-        patrons[patronID].returnDocument(docid);
+    bool documentExists = documents.count(docid) > 0;
+    bool patronExists = patrons.count(patronID) > 0;
+
+    if (documentExists && patronExists) {
+        Document& doc = documents[docid];
+        Patron& patron = patrons[patronID];
+
+        doc.returnback();
+        patron.returnDocument(docid);
     }
 }
+
 
 map<int, Document> DocumentManager::getDocuments() {
     return documents;
